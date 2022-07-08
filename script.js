@@ -13,14 +13,14 @@ const account1 = {
   pin: 1111,
 
   movementsDates: [
-    '2019-11-18T21:31:17.178Z',
-    '2019-12-23T07:42:02.383Z',
-    '2020-01-28T09:15:04.904Z',
-    '2020-04-01T10:17:24.185Z',
-    '2020-05-08T14:11:59.604Z',
-    '2020-07-26T17:01:17.194Z',
-    '2020-07-28T23:36:17.929Z',
-    '2020-08-01T10:51:36.790Z',
+    '2022-04-09T14:11:59.604Z',
+    '2022-03-10T14:11:59.604Z',
+    '2022-05-08T14:11:59.604Z',
+    '2022-06-07T14:11:59.604Z',
+    '2022-07-04T14:11:59.604Z',
+    '2022-07-05T14:11:59.604Z',
+    '2022-07-06T14:11:59.604Z',
+    '2022-07-07T14:11:59.604Z',
   ],
   currency: 'EUR',
   locale: 'pt-PT', // de-DE
@@ -33,14 +33,14 @@ const account2 = {
   pin: 2222,
 
   movementsDates: [
-    '2019-11-01T13:15:33.035Z',
-    '2019-11-30T09:48:16.867Z',
-    '2019-12-25T06:04:23.907Z',
-    '2020-01-25T14:18:46.235Z',
-    '2020-02-05T16:33:06.386Z',
-    '2020-04-10T14:43:26.374Z',
-    '2020-06-25T18:49:59.371Z',
-    '2020-07-26T12:01:20.894Z',
+    '2022-04-09T14:11:59.604Z',
+    '2022-03-10T14:11:59.604Z',
+    '2022-05-08T14:11:59.604Z',
+    '2022-06-07T14:11:59.604Z',
+    '2022-07-04T14:11:59.604Z',
+    '2022-07-05T14:11:59.604Z',
+    '2022-07-06T14:11:59.604Z',
+    '2022-07-07T14:11:59.604Z',
   ],
   currency: 'USD',
   locale: 'en-US',
@@ -107,16 +107,17 @@ const displayMovements = function (account) {
 //--------------------------------------------------------------- Movements Date Formater
 
 const MovementsDateFormater = date => {
-  const TodayTimeStamp = Date.now();
-  // we need to check f the movment was more than three days ago
+  //Calculate the diffrence in days
+  const daysDiff = Math.round(
+    (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24)
+  );
 
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
-  const day = `${date.getDate()}`.padStart(2, '0');
+  console.log(daysDiff);
 
-  const DateUI = `${day}/${month}/${year} `;
-
-  return DateUI;
+  if (daysDiff === 0) return 'Today';
+  if (daysDiff === 1) return 'Yesterday';
+  if (daysDiff >= 2 && daysDiff <= 5) return `${daysDiff} Days ago`;
+  else return DateFormating(date);
 };
 
 //---------------------------------------------------------------------------------
@@ -124,7 +125,7 @@ const MovementsDateFormater = date => {
 
 const addMovement = (account, movement) => {
   account.movements.push(movement);
-  account.movementsDates.push(new Date());
+  account.movementsDates.push(new Date().toISOString());
 };
 
 //---------------------------------------------------------------------------------
@@ -309,19 +310,20 @@ const sortingHandler = () => {
 btnSort.addEventListener('click', sortingHandler);
 
 //---------------------------------------------------------------------------------
+//--------------------------------------------------------------- Date Formating
+
+const DateFormating = date => {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+
+  return `${day}/${month}/${year}  `;
+};
+//---------------------------------------------------------------------------------
 //--------------------------------------------------------------- DISPLAY  Current balance DATE
 
 const displayBalanceDate = () => {
-  const Today = new Date();
-  const year = Today.getFullYear();
-  const month = `${Today.getMonth() + 1}`.padStart(2, '0');
-  const day = `${Today.getDate()}`.padStart(2, '0');
-  const hours = `${Today.getHours()}`.padStart(2, '0');
-  const mins = `${Today.getMinutes()}`.padStart(2, '0');
-
-  const DateUI = `${day}/${month}/${year}, ${hours}:${mins} `;
-
-  labelDate.textContent = DateUI;
+  labelDate.textContent = DateFormating(new Date());
 };
 
 //---------------------------------------------------------------------------------
