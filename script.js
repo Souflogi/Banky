@@ -87,6 +87,7 @@ const displayMovements = function (account) {
     : account.movements;
 
   containerMovements.textContent = '';
+
   movementsToDisplay.forEach((movement, index) => {
     const type = movement > 0 ? 'deposit' : 'withdrawal';
 
@@ -94,11 +95,36 @@ const displayMovements = function (account) {
           <div class="movements__type movements__type--${type}">${
       index + 1
     } deposit</div>
-          <div class="movements__date">3 days ago</div>
+          <div class="movements__date">${MovementsDateFormater(
+            new Date(account.movementsDates[index])
+          )}</div>
           <div class="movements__value">${movement}€</div>
         </div>`;
     containerMovements.insertAdjacentHTML('afterbegin', movmentUI);
   });
+};
+//---------------------------------------------------------------------------------
+//--------------------------------------------------------------- Movements Date Formater
+
+const MovementsDateFormater = date => {
+  const TodayTimeStamp = Date.now();
+  // we need to check f the movment was more than three days ago
+
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+
+  const DateUI = `${day}/${month}/${year} `;
+
+  return DateUI;
+};
+
+//---------------------------------------------------------------------------------
+//--------------------------------------------------------------- Add Movement
+
+const addMovement = (account, movement) => {
+  account.movements.push(movement);
+  account.movementsDates.push(new Date());
 };
 
 //---------------------------------------------------------------------------------
@@ -188,7 +214,7 @@ const logInHandler = e => {
 btnLogin.addEventListener('click', logInHandler);
 
 //---------------------------------------------------------------------------------
-//--------------------------------------------------------------- Transfer
+//--------------------------------------------------------------- TRANSFER
 
 const transferHandler = e => {
   e.preventDefault();
@@ -199,8 +225,8 @@ const transferHandler = e => {
 
   if (amountToSend > 0 && receiverfound?.username !== CurrentAccount.username) {
     if (CurrentAccount.balance >= amountToSend) {
-      CurrentAccount.movements.push(-amountToSend);
-      receiverfound.movements.push(amountToSend);
+      addMovement(CurrentAccount, -amountToSend);
+      addMovement(receiverfound, amountToSend);
 
       refreshUI();
     }
@@ -210,15 +236,6 @@ const transferHandler = e => {
 };
 
 btnTransfer.addEventListener('click', transferHandler);
-
-//---------------------------------------------------------------------------------
-//--------------------------------------------------------------- Refrech UI
-
-const refreshUI = () => {
-  displayMovements(CurrentAccount);
-  calDisplaySummary(CurrentAccount);
-  calcDisplayBalance(CurrentAccount);
-};
 
 //---------------------------------------------------------------------------------
 //--------------------------------------------------------------- DELETE ACCOUNT
@@ -250,8 +267,6 @@ const accountDeleteHandler = e => {
     //remove the user from the array
     accounts.splice(TargetUserIndex, 1);
   }
-
-  console.log('clicked');
 };
 
 btnClose.addEventListener('click', accountDeleteHandler);
@@ -270,7 +285,7 @@ const requestLoanHandler = e => {
     );
     if (legible) {
       setTimeout(() => {
-        CurrentAccount.movements.push(loanValue);
+        addMovement(CurrentAccount, loanValue);
 
         refreshUI();
       }, 1000);
@@ -293,14 +308,33 @@ const sortingHandler = () => {
 
 btnSort.addEventListener('click', sortingHandler);
 
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-// LECTURES
+//---------------------------------------------------------------------------------
+//--------------------------------------------------------------- DISPLAY  Current balance DATE
 
-const currencies = new Map([
-  ['USD', 'United States dollar'],
-  ['EUR', 'Euro'],
-  ['GBP', 'Pound sterling'],
-]);
+const displayBalanceDate = () => {
+  const Today = new Date();
+  const year = Today.getFullYear();
+  const month = `${Today.getMonth() + 1}`.padStart(2, '0');
+  const day = `${Today.getDate()}`.padStart(2, '0');
+  const hours = `${Today.getHours()}`.padStart(2, '0');
+  const mins = `${Today.getMinutes()}`.padStart(2, '0');
 
-/////////////////////////////////////////////////
+  const DateUI = `${day}/${month}/${year}, ${hours}:${mins} `;
+
+  labelDate.textContent = DateUI;
+};
+
+//---------------------------------------------------------------------------------
+//--------------------------------------------------------------- Refrech UI
+
+const refreshUI = () => {
+  displayMovements(CurrentAccount);
+  calDisplaySummary(CurrentAccount);
+  calcDisplayBalance(CurrentAccount);
+  displayBalanceDate();
+};
+
+//FAKE LOG IN   DELETE LATER
+CurrentAccount = account1;
+refreshUI();
+containerApp.style.opacity = '1';
