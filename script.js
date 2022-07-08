@@ -98,7 +98,7 @@ const displayMovements = function (account) {
           <div class="movements__date">${MovementsDateFormater(
             new Date(account.movementsDates[index])
           )}</div>
-          <div class="movements__value">${movement}€</div>
+          <div class="movements__value">${CurrencyFormater(movement)}</div>
         </div>`;
     containerMovements.insertAdjacentHTML('afterbegin', movmentUI);
   });
@@ -111,8 +111,6 @@ const MovementsDateFormater = date => {
   const daysDiff = Math.round(
     (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24)
   );
-
-  console.log(daysDiff);
 
   if (daysDiff === 0) return 'Today';
   if (daysDiff === 1) return 'Yesterday';
@@ -155,7 +153,7 @@ const calcDisplayBalance = account => {
   );
 
   account.balance = balance;
-  labelBalance.textContent = balance + '€';
+  labelBalance.textContent = CurrencyFormater(balance.toFixed(2));
 };
 
 //---------------------------------------------------------------------------------
@@ -173,14 +171,14 @@ const calDisplaySummary = account => {
     .filter(movement => movement < 0)
     .reduce((acc, income) => acc + income, 0);
 
-  labelSumIn.textContent = `${incomes}€`;
-  labelSumOut.textContent = `${Math.abs(outcomes)}€`;
+  labelSumIn.textContent = CurrencyFormater(incomes.toFixed(2));
+  labelSumOut.textContent = CurrencyFormater(Math.abs(outcomes.toFixed(2)));
 
   const intrest = account.movements
     .filter(movement => movement > 0)
     .reduce((acc, income) => acc + (income * account.interestRate) / 100, 0);
 
-  labelSumInterest.textContent = `${intrest}€`;
+  labelSumInterest.textContent = CurrencyFormater(intrest.toFixed(2));
 };
 
 //---------------------------------------------------------------------------------
@@ -312,18 +310,31 @@ btnSort.addEventListener('click', sortingHandler);
 //---------------------------------------------------------------------------------
 //--------------------------------------------------------------- Date Formating
 
-const DateFormating = date => {
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
-  const day = `${date.getDate()}`.padStart(2, '0');
+const DateFormating = (date, options) => {
+  return new Intl.DateTimeFormat(CurrentAccount.local, options).format(date);
+};
 
-  return `${day}/${month}/${year}  `;
+//---------------------------------------------------------------------------------
+//--------------------------------------------------------------- Currency Formater
+
+const CurrencyFormater = amount => {
+  const options = {
+    style: 'currency',
+    currency: CurrentAccount.currency,
+  };
+  return new Intl.NumberFormat(CurrentAccount.local, options).format(amount);
 };
 //---------------------------------------------------------------------------------
 //--------------------------------------------------------------- DISPLAY  Current balance DATE
 
 const displayBalanceDate = () => {
-  labelDate.textContent = DateFormating(new Date());
+  labelDate.textContent = DateFormating(new Date(), {
+    hour: 'numeric',
+    minute: 'numeric',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 };
 
 //---------------------------------------------------------------------------------
@@ -335,8 +346,3 @@ const refreshUI = () => {
   calcDisplayBalance(CurrentAccount);
   displayBalanceDate();
 };
-
-//FAKE LOG IN   DELETE LATER
-CurrentAccount = account1;
-refreshUI();
-containerApp.style.opacity = '1';
