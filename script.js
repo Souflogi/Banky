@@ -7,7 +7,7 @@
 // Data
 
 const account1 = {
-  owner: 'Jonas Schmedtmann',
+  owner: 'Soufiane Sammah',
   movements: [200, 455.23, -306.5, 25000, -642.21, -133.9, 79.97, 1300],
   interestRate: 1.2, // %
   pin: 1111,
@@ -47,6 +47,8 @@ const account2 = {
 };
 
 const accounts = [account1, account2];
+let logOutInterval = null;
+let mainTimeInterval = null;
 
 // Elements
 const labelWelcome = document.querySelector('.welcome');
@@ -88,10 +90,18 @@ const displayMovements = function (account) {
 
   containerMovements.textContent = '';
 
-  movementsToDisplay.forEach((movement, index) => {
+  movementsToDisplay.forEach((movement, index, array) => {
     const type = movement > 0 ? 'deposit' : 'withdrawal';
 
-    const movmentUI = `<div class="movements__row">
+    //setting a custom color variable to use it on the last added element
+    document.documentElement.style.setProperty(
+      '--bump-color',
+      `${movement > 0 ? 'yellowgreen' : 'orangered'}`
+    );
+
+    const movmentUI = `<div class="movements__row ${
+      array.length - 1 == index ? 'bump' : ''
+    }">
           <div class="movements__type movements__type--${type}">${
       index + 1
     } deposit</div>
@@ -104,12 +114,27 @@ const displayMovements = function (account) {
   });
 };
 //---------------------------------------------------------------------------------
+//---------------------------------------------------------------UserName Creator
+const createUserNames = accounts => {
+  accounts.forEach(
+    acc =>
+      (acc.username = acc.owner
+        .toLocaleLowerCase()
+        .split(' ')
+        .map(word => word.slice(0, 1))
+        .join(''))
+  );
+};
+createUserNames(accounts);
+//---------------------------------------------------------------------------------
 //--------------------------------------------------------------- Movements Date Formater
 
 const MovementsDateFormater = date => {
   //Calculate the diffrence in days
   const daysDiff = Math.round(
-    (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24)
+    //Date.now() now timeStamp
+    //getTime() timeStamp for a specific date
+    (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24) //=> result in days
   );
 
   if (daysDiff === 0) return 'Today';
@@ -125,20 +150,6 @@ const addMovement = (account, movement) => {
   account.movements.push(movement);
   account.movementsDates.push(new Date().toISOString());
 };
-
-//---------------------------------------------------------------------------------
-//---------------------------------------------------------------UserName Creator
-const createUserNames = accounts => {
-  accounts.forEach(
-    acc =>
-      (acc.username = acc.owner
-        .toLocaleLowerCase()
-        .split(' ')
-        .map(word => word.slice(0, 1))
-        .join(''))
-  );
-};
-createUserNames(accounts);
 
 //---------------------------------------------------------------------------------
 //---------------------------------------------------------------calcDisplayBalance
@@ -204,8 +215,11 @@ const logInHandler = e => {
     inputLoginUsername.value = inputLoginPin.value = '';
     inputLoginPin.blur();
     inputLoginUsername.blur();
+    startLogOutTimer();
     refreshUI();
+    displayBalanceDate();
   } else {
+    // show the error
     errorContainer.style.display = 'flex';
   }
 };
@@ -213,10 +227,28 @@ const logInHandler = e => {
 btnLogin.addEventListener('click', logInHandler);
 
 //---------------------------------------------------------------------------------
+//--------------------------------------------------------------- LOG OUT
+const logOut = () => {
+  clearInterval(mainTimeInterval);
+  mainTimeInterval = undefined;
+  clearInterval(logOutInterval);
+  logOutInterval = undefined;
+  //set currentAccount to Null;
+  CurrentAccount = null;
+  // welcome message reset
+  labelWelcome.textContent = 'Log in to get started';
+  // opacity to zero
+  containerApp.style.opacity = 0;
+};
+
+//---------------------------------------------------------------------------------
 //--------------------------------------------------------------- TRANSFER
 
 const transferHandler = e => {
   e.preventDefault();
+
+  startLogOutTimer();
+
   const amountToSend = +inputTransferAmount.value;
   const receiverName = inputTransferTo.value;
 
@@ -254,14 +286,7 @@ const accountDeleteHandler = e => {
     accounts[TargetUserIndex].pin === pinTodelete &&
     usernameToDelete === CurrentAccount.username
   ) {
-    //set currentAccount to Null;
-    CurrentAccount = null;
-    // refresh the UI
-    refreshUI();
-    // welcome message reset
-    labelWelcome.textContent = 'Log in to get started';
-    // opacity to zero
-    containerApp.style.opacity = 0;
+    logOut();
 
     //remove the user from the array
     accounts.splice(TargetUserIndex, 1);
@@ -276,6 +301,8 @@ btnClose.addEventListener('click', accountDeleteHandler);
 const requestLoanHandler = e => {
   e.preventDefault();
 
+  startLogOutTimer();
+
   const loanValue = +inputLoanAmount.value;
 
   if (loanValue > 0) {
@@ -285,9 +312,8 @@ const requestLoanHandler = e => {
     if (legible) {
       setTimeout(() => {
         addMovement(CurrentAccount, loanValue);
-
         refreshUI();
-      }, 1000);
+      }, 3000);
     }
   }
 
@@ -325,16 +351,23 @@ const CurrencyFormater = amount => {
   return new Intl.NumberFormat(CurrentAccount.local, options).format(amount);
 };
 //---------------------------------------------------------------------------------
-//--------------------------------------------------------------- DISPLAY  Current balance DATE
+//--------------------------------------------------------------- DISPLAY  Current balance Time and date
 
 const displayBalanceDate = () => {
-  labelDate.textContent = DateFormating(new Date(), {
-    hour: 'numeric',
-    minute: 'numeric',
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
+  clearInterval(mainTimeInterval);
+  const setClock = () => {
+    console.log('main timer');
+    labelDate.textContent = DateFormating(new Date(), {
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+  setClock();
+  mainTimeInterval = setInterval(setClock, 1000);
 };
 
 //---------------------------------------------------------------------------------
@@ -344,5 +377,31 @@ const refreshUI = () => {
   displayMovements(CurrentAccount);
   calDisplaySummary(CurrentAccount);
   calcDisplayBalance(CurrentAccount);
-  displayBalanceDate();
+};
+
+//---------------------------------------------------------------------------------
+//--------------------------------------------------------------- LOG OUT TIMER
+const startLogOutTimer = () => {
+  clearInterval(logOutInterval);
+  logOutInterval = undefined;
+  // 10 seconds
+  let timer = 100 * 1000;
+
+  const tik = () => {
+    timer -= 1000;
+    let toDate = new Date(timer);
+    let minutes = toDate.getMinutes();
+    let seconds = toDate.getSeconds();
+
+    labelTimer.textContent = `${(minutes + '').padStart(2, '0')}:${(
+      seconds + ''
+    ).padStart(2, '0')}`;
+
+    if (timer === 0) {
+      logOut();
+    }
+  };
+
+  tik();
+  logOutInterval = setInterval(tik, 1000);
 };

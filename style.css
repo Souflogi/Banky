@@ -3,6 +3,9 @@
  * in case you're wondering how I built the UI.
  * Have fun! 😁
  */
+:root {
+  --bump-color: yellowgreen;
+}
 
 * {
   margin: 0;
@@ -323,4 +326,39 @@ h2 {
 
 .timer {
   font-weight: 600;
+}
+
+.bump {
+  animation: bump 700ms ease-out;
+}
+
+
+@keyframes bump {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  10% {
+    opacity: 0.1;
+    transform: scale(0.8);
+    background-color: var(--bump-color);
+  }
+
+  30% {
+    opacity: 0.3;
+    transform: scale(.7);
+    background-color: var(--bump-color)
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(.9);
+    background-color: var(--bump-color)
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
